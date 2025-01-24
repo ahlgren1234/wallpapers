@@ -1,4 +1,4 @@
-# Wallpapers App
+# Wallpapers App.
 
 Welcome to the Wallpapers App! This application allows users to browse, download, and set high-quality wallpapers for their mobile devices. With a vast collection of stunning images, users can easily find the perfect wallpaper to personalize their home and lock screens.
 
