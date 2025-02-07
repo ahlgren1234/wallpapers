@@ -22,12 +22,14 @@ const HomeScreen = () => {
     const [activeCategory, setActiveCategory] = useState(null);
     const searchInputRef = useRef(null);
     const modalRef = useRef(null);
+    const scrollRef = useRef(null);
+    const [isEndReached, setIsEndReached] = useState(false);
 
     useEffect(() => { 
         fetchImages();
     }, [])
 
-    const fetchImages = async (params = { page: 1 }, append = false) => {
+    const fetchImages = async (params = { page: 1 }, append = true) => {
         let res = await apiCall(params);
         if (res.success && res?.data?.hits) {
             if (append)
@@ -128,6 +130,38 @@ const HomeScreen = () => {
         searchInputRef?.current?.clear();
     }
 
+    const handleScroll = (event) => {
+        const contentHeight = event.nativeEvent.contentSize.height;
+        const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
+        const scrollOffset = event.nativeEvent.contentOffset.y;
+        const bottomPosition = contentHeight - scrollViewHeight;
+
+        if (scrollOffset >= bottomPosition - 1) {
+            if (!isEndReached) {
+                setIsEndReached(true);
+                // console.log("Reached bottom of scrollview")
+                // fetch more images
+                ++page;
+                let params = {
+                    page,
+                    ...filters
+                }
+                if (activeCategory) params.category = activeCategory;
+                if (search) params.q = search;
+                fetchImages(params);
+            }
+        } else if (isEndReached) {
+            setIsEndReached(false);
+        }
+    }
+
+    const handleScrollUp = () => {
+        scrollRef?.current?.scrollTo({
+            y: 0,
+            animated: true,
+        })
+    }
+
     const handleTextDebounce = useCallback(debounce(handleSearch, 400), []);
 
     console.log("Filters:", filters)
@@ -136,7 +170,7 @@ const HomeScreen = () => {
         <View style={[styles.container, {paddingTop}]}>
             {/* header */}
             <View style={styles.header}>
-                <Pressable>
+                <Pressable onPress={handleScrollUp}>
                     <Text style={styles.title}>
                         Pixels
                     </Text>
@@ -147,6 +181,9 @@ const HomeScreen = () => {
             </View>
 
             <ScrollView
+                onScroll={handleScroll}
+                scrollEventThrottle={5}
+                ref={scrollRef}
                 contentContainerStyle={{gap: 15}}
             >
                 {/* search bar */}
